@@ -1,0 +1,6 @@
+rental <- read.csv("rating_features.csv")
+summary(rental)
+attach(rental)
+head(rental$maximum_nights)
+tail(rental$bed_type)
+plot(x=rental$latitude.North.,y=rental$longitude.East.,main="scattlerpolot")
