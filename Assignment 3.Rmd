@@ -1,0 +1,78 @@
+---
+title: "Assignment 3"
+author: "pratheek sreerangam"
+date: "2022-10-18"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+BankData <- read.csv("C:/Users/prath/Downloads/UniversalBank.csv")
+summary(BankData)
+library(caret)
+library(ISLR)
+library(e1071)
+library(dplyr)
+library(class)
+library(reshape2)
+library(ggplot2)
+library(gmodels)
+library(lattice)
+#converting variables
+BankData$Personal.Loan <- factor(BankData$Personal.Loan)
+BankData$Online <- factor(BankData$Online)
+BankData$CreditCard <- factor(BankData$CreditCard)
+df= BankData
+#TASK A
+set.seed(945)
+Train_index <- createDataPartition(df$Personal.Loan, p = 0.6, list = FALSE)
+train.df = df[Train_index,]
+validation.df = df[-Train_index,]
+mytable <- xtabs(~ CreditCard + Online + Personal.Loan , data = train.df)
+ftable(mytable)
+#TASK B
+probability = 59/(59+479)
+probability
+#TASK C
+table(Personal.Loan = train.df$Personal.Loan, Online = train.df$Online)
+table(Personal.Loan = train.df$Personal.Loan, CreditCard = train.df$CreditCard)
+table(Personal.Loan = train.df$Personal.Loan)
+#TASK D
+#i. P(CC = 1 | Loan = 1) (the proportion of credit card holders among the loan 
+#acceptors) 
+Probablity1 <- 93/(93+195)
+Probablity1
+#ii. P(Online = 1 | Loan = 1)  
+Probablity2 <- 179/(179+109)
+Probablity2
+#iii. P(Loan = 1) (the proportion of loan acceptors)  
+Probablity3 <- 288/(288+2712)
+Probablity3
+#iv. P(CC = 1 | Loan = 0)  
+Probablity4 <- 788/(788+1924)
+Probablity4
+#v. P(Online = 1 | Loan = 0) 
+Probablity5 <- 1631/(1631+1081)
+Probablity5
+#vi. P(Loan = 0) 
+Probablity6 <- 2712/(2712+288)
+Probablity6
+#TASK5
+Task5Probablity <- (Probablity1*Probablity2*Probablity3)/
+((Probablity1*Probablity2*Probablity3) +(Probablity4*Probablity5*Probablity6))
+                                                                    
+Task5Probablity 
+#TASK6
+##The value we get in questions 2 and 5 is practically identical. The exact procedure is what distinguishes it from the Naive Bayes method.
+#In contrast to the naive bayes technique, we require a similar independent variable and classification to #predict. Because we used the identical numbers from the pivot table, we can defend the result of 0.1096654 #that we obtained from question 2 as being more precise.
+#Task7
+#Run naive Bayes on the data. Examine the model output on training data, and find the entry
+#that corresponds to P(Loan = 1 | CC = 1, Online = 1). Compare this to the number you
+#obtained in (E).
+nb.model <- naiveBayes(Personal.Loan~ Online + CreditCard, data = train.df)
+To_Predict=data.frame(Online=1, CreditCard= 1)
+predict(nb.model, To_Predict,type = 'raw')
+#We calculated a value of 0.08463445 from question 7, and a value of 0.1087106 from job 5. the outcome is nearly identical to what Task 5 gave us. Only a small difference exists as a result of the rounding off.
+#The rank will not be affected by the difference.
+```
