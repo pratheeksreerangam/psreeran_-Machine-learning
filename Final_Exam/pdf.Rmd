@@ -1,0 +1,101 @@
+---
+title: "Final project"
+author: "pratheek sreerangam"
+date: "2022-12-15"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+```{r}
+library(ggplot2) 
+library(readr) 
+library(mice)
+library(lattice)
+library(cluster)
+library(MASS)
+library(PCAmixdata)
+library(dplyr)
+```
+
+```{r}
+dataset <- read.csv("C:/Users/prath/Downloads/archive/Automobile_data.csv")
+summary(dataset)
+data.frame(dataset)
+```
+```{r}
+summary(dataset)
+dataset$symboling <- NULL
+dataset$normalized.losses <- NULL
+```
+
+### Data cleaning
+```{r}
+#Code "?" to NA
+dataset$horsepower[dataset$horsepower == "?"] <- NA
+dataset$price[dataset$price == "?"] <- NA
+dataset$stroke[dataset$stroke == "?"] <- NA
+dataset$bore[dataset$bore == "?"] <- NA
+dataset$peak.rpm[dataset$peak.rpm == "?"] <- NA
+
+
+#convert to numerical forms
+dataset$horsepower<-as.numeric(as.character(dataset$horsepower))
+dataset$price<-as.numeric(as.character(dataset$price))
+dataset$stroke<-as.numeric(as.character(dataset$stroke))
+dataset$bore<-as.numeric(as.character(dataset$bore))
+dataset$peak.rpm<-as.numeric(as.character(dataset$peak.rpm))
+
+#the elimination of no price observations
+dataset<-subset(dataset, !is.na(price))
+
+#Check to see what values we are missing via obs.
+md.pattern(dataset)
+
+#Utilize the mice package to estimate values.
+tempData <- mice(dataset,m=2,maxit=6,meth='pmm',seed=456)
+summary(tempData)
+```
+
+
+```{r}
+#Overwrite missing
+dataset <- complete(tempData,1)
+#one last look for missing and ?
+colSums(is.na(dataset))
+colSums(dataset == '?')
+#The numerical variables are scaled
+ind <- sapply(dataset, is.numeric)
+dataset_scale<-dataset
+dataset_scale[ind] <- lapply(dataset[ind], scale)
+str(dataset)
+```
+
+#For this method, renaming a variable's levels will prevent conflicts.
+```{r}
+levels(dataset_scale$num.of.cylinders)
+head(dataset_scale$num.of.cylinders)
+levels(dataset_scale$num.of.cylinders)<-c('cyl_five', 'cyl_eight', 'cyl_six', 'cyl_four', 'cyl_two', 'cyl_twelve', 'cyl_three')
+head(dataset_scale$num.of.cylinders)
+#Separate qualitative and quantitative data
+X.quanti <- dataset_scale[,c(8:12,15,17:24)]
+X.quali <- dataset_scale[,c(1:7,13,14,16)]
+#pca<-PCAmix(X.quanti,X.quali,ndim=4)
+pca <-PCAmix(X.quanti,X.quali,ndim=2,graph=FALSE, rename.level = TRUE)
+```
+```{r}
+#converting to a data frame
+coords<-as.data.frame(pca$ind$coord)
+```
+Next we apply k means to cluster based on our PCA, I choose 4 as this looks natural from assessing by eye
+```{r}
+#To cluster, use K means.
+library(cluster)
+library(factoextra)
+km <- kmeans(coords, centers = 4)
+km
+
+plot(coords[,1], coords[,2], col = km$cluster, pch = 20)
+dataset$cluster<-as.factor(km$cluster)
+```
+
